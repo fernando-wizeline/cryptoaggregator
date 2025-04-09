@@ -1,0 +1,19 @@
+[
+    {
+        "id": 1,
+        "component": "btc",
+        "model": {}
+    },
+
+    {
+        "id": 2,
+        "component": "eth",
+        "model": {}
+    },
+
+    {
+        "id": 3,
+        "component": "xrp",
+        "model": {}
+    }
+]
