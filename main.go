@@ -8,14 +8,14 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"strings"
 
 	"time"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/dghubble/sling"
 	"github.com/gin-gonic/gin"
 
+	"ferwizeline.com/cryptoaggregator/aggregators"
+	"ferwizeline.com/cryptoaggregator/api"
 	"ferwizeline.com/cryptoaggregator/types"
 )
 
@@ -47,12 +47,17 @@ func main() {
 func handleAggregationsGet(c *gin.Context) {
 	types.JSONResponse(c, func() (any, error) {
 		inputLayouts, err := loadInputLayouts()
-
 		if err != nil {
 			return nil, err
 		}
 
-		return getAggregations(inputLayouts)
+		ap := types.AggregatorParams{
+			InputLayouts: inputLayouts,
+		}
+
+		ba := aggregators.NewAggregator(ap)
+
+		return getAggregations(ba)
 	})
 }
 
@@ -74,31 +79,7 @@ func loadInputLayouts() (types.InputLayouts, error) {
 
 }
 
-func getAggregations(inputLayouts types.InputLayouts) (types.OutputLayouts, error) {
+func getAggregations(aggregator api.Aggregator) (types.OutputLayouts, error) {
 
-	outputLayouts := types.OutputLayouts{}
-
-	for _, il := range inputLayouts {
-		tickerResponse := new(types.TickerResponse)
-
-		_, err := sling.New().Base(fmt.Sprintf("https://stage.bitso.com/api/v3/ticker?book=%s_mxn", il.Component)).Receive(tickerResponse, nil)
-
-		if err != nil {
-			return nil, err
-		}
-
-		outputLayout := types.Layout{}
-		outputLayout.Id = il.Id
-		outputLayout.Component = il.Component
-		outputLayout.Model.Name = tickerResponse.Payload.Book
-		outputLayout.Model.Date = tickerResponse.Payload.CreatedAt
-		outputLayout.Model.Price.MXN = tickerResponse.Payload.Last
-		outputLayout.Model.Price.USD = tickerResponse.Payload.Last / 21
-		outputLayout.Model.TickerSymbol = strings.ToUpper(strings.Split(tickerResponse.Payload.Book, "_")[0])
-
-		outputLayouts = append(outputLayouts, outputLayout)
-
-	}
-
-	return outputLayouts, nil
+	return aggregator.GetAggregations()
 }

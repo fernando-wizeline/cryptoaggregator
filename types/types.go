@@ -1,6 +1,8 @@
 package types
 
-import "time"
+import (
+	"time"
+)
 
 type Currency struct {
 	Date         time.Time `json:"date"`
@@ -27,6 +29,10 @@ type TickerResponse struct {
 		Book      string    `json:"book"`
 		CreatedAt time.Time `json:"created_at"`
 	} `json:"payload"`
+}
+
+type AggregatorParams struct {
+	InputLayouts InputLayouts
 }
 
 type InputLayouts []Layout //A slice of layouts whose Model is empty.
