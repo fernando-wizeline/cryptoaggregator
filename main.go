@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -21,10 +19,6 @@ import (
 	"ferwizeline.com/cryptoaggregator/types"
 )
 
-const (
-	failureHeader = "x-failure-reason"
-)
-
 type environment struct {
 	Env                 string        `env:"ENV" envDefault:"production"`
 	Port                string        `env:"PORT" envDefault:":8888"`
@@ -32,8 +26,6 @@ type environment struct {
 	DataProviderURL     url.URL       `env:"DATA_PROVIDER_URL" envDefault:"https://stage.bitso.com/api/v3/ticker?book="`
 	DataProviderTimeout time.Duration `env:"DATA_PROVIDER_SERVICE_TIMEOUT" envDefault:"30s"`
 }
-
-type jsonResponseFunc func() (result any, err error)
 
 func main() {
 	_, cancelFn := context.WithCancel(context.Background())
@@ -52,19 +44,8 @@ func main() {
 	r.Run(config.Port)
 }
 
-type RouterError struct {
-	StatusCode int                    `json:"code"`
-	Message    string                 `json:"message"`
-	Details    map[string]interface{} `json:"details,omitempty" swaggerignore:"true"`
-	Err        error                  `json:"-"`
-}
-
-func (r RouterError) Error() string {
-	return r.Message
-}
-
 func handleAggregationsGet(c *gin.Context) {
-	JSONResponse(c, func() (any, error) {
+	types.JSONResponse(c, func() (any, error) {
 		inputLayouts, err := loadInputLayouts()
 
 		if err != nil {
@@ -120,33 +101,4 @@ func getAggregations(inputLayouts types.InputLayouts) (types.OutputLayouts, erro
 	}
 
 	return outputLayouts, nil
-}
-
-func JSONResponse(c *gin.Context, f jsonResponseFunc) {
-	if result, err := f(); err != nil {
-		AbortIfErr(c, err)
-	} else {
-		c.JSON(http.StatusOK, result)
-	}
-}
-
-func AbortIfErr(c *gin.Context, err error) bool {
-	if err != nil {
-		_ = c.Error(err) //nolint:errcheck
-		var routerErr RouterError
-		if errors.As(err, &routerErr) {
-			c.Header(failureHeader, routerErr.Message)
-			c.AbortWithStatusJSON(routerErr.StatusCode, &routerErr)
-		} else {
-			c.Header(failureHeader, err.Error())
-			routerErr = RouterError{
-				StatusCode: http.StatusInternalServerError,
-				Message:    err.Error(),
-				Err:        err,
-			}
-			c.AbortWithStatusJSON(http.StatusInternalServerError, &routerErr)
-		}
-	}
-
-	return err == nil
 }
