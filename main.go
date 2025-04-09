@@ -55,7 +55,7 @@ func handleAggregationsGet(c *gin.Context) {
 			InputLayouts: inputLayouts,
 		}
 
-		ba := aggregators.NewAggregator(ap)
+		ba := aggregators.NewBitsoAggregator(ap)
 
 		return getAggregations(ba)
 	})

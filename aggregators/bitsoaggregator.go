@@ -12,7 +12,7 @@ type BitsoAggregator struct {
 	inputLayouts types.InputLayouts
 }
 
-func NewAggregator(params types.AggregatorParams) *BitsoAggregator {
+func NewBitsoAggregator(params types.AggregatorParams) *BitsoAggregator {
 
 	return &BitsoAggregator{
 		inputLayouts: params.InputLayouts,
