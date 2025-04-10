@@ -2,6 +2,8 @@ package types
 
 import (
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Currency struct {
@@ -9,8 +11,8 @@ type Currency struct {
 	Name         string    `json:"name"`
 	TickerSymbol string    `json:"ticker_symbol"`
 	Price        struct {
-		USD int `json:"usd"`
-		MXN int `json:"mxn"`
+		USD string `json:"usd"`
+		MXN string `json:"mxn"`
 	} `json:"price"`
 }
 
@@ -23,16 +25,22 @@ type Layout struct {
 type TickerResponse struct {
 	Success bool `json:"success"`
 	Payload struct {
-		High      int       `json:"payload"`
-		Last      int       `json:"last"`
-		Low       int       `json:"low"`
+		High      string    `json:"payload"`
+		Last      string    `json:"last"`
+		Low       string    `json:"low"`
 		Book      string    `json:"book"`
 		CreatedAt time.Time `json:"created_at"`
 	} `json:"payload"`
 }
 
 type AggregatorParams struct {
+	Context      *gin.Context
 	InputLayouts InputLayouts
+}
+
+type FixtureLoaderParams struct {
+	Context    *gin.Context
+	PathToJSON string
 }
 
 type InputLayouts []Layout //A slice of layouts whose Model is empty.

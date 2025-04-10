@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
-	"os"
 
 	"time"
 
@@ -16,6 +13,7 @@ import (
 
 	"ferwizeline.com/cryptoaggregator/aggregators"
 	"ferwizeline.com/cryptoaggregator/api"
+	"ferwizeline.com/cryptoaggregator/loaders"
 	"ferwizeline.com/cryptoaggregator/types"
 )
 
@@ -46,40 +44,34 @@ func main() {
 
 func handleAggregationsGet(c *gin.Context) {
 	types.JSONResponse(c, func() (any, error) {
-		inputLayouts, err := loadInputLayouts()
+
+		flp := types.FixtureLoaderParams{
+			PathToJSON: "fixtures/inputlayout.json",
+			Context:    c,
+		}
+		fl := loaders.NewDefaultLoader(flp)
+		inputLayouts, err := loadInputLayouts(fl)
 		if err != nil {
 			return nil, err
 		}
 
 		ap := types.AggregatorParams{
 			InputLayouts: inputLayouts,
+			Context:      c,
 		}
-
 		ba := aggregators.NewBitsoAggregator(ap)
 
 		return getAggregations(ba)
 	})
 }
 
-func loadInputLayouts() (types.InputLayouts, error) {
-	b, err := os.ReadFile("fixtures/inputlayout.json")
-	if err != nil {
-		log.Fatal("Failed to read json from file")
-	}
+func loadInputLayouts(fl api.FixtureLoader) (types.InputLayouts, error) {
 
-	var il types.InputLayouts
-	err = json.NewDecoder(bytes.NewBuffer(b)).Decode(&il)
-
-	if err != nil {
-		log.Fatal("unable to parse JSON object")
-		return nil, err
-	}
-
-	return il, nil
+	return fl.GetFixture()
 
 }
 
-func getAggregations(aggregator api.Aggregator) (types.OutputLayouts, error) {
+func getAggregations(ag api.Aggregator) (types.OutputLayouts, error) {
 
-	return aggregator.GetAggregations()
+	return ag.GetAggregations()
 }
