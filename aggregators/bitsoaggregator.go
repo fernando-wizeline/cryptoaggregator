@@ -28,7 +28,7 @@ func NewBitsoAggregator(params types.AggregatorParams) *BitsoAggregator {
 }
 
 func (a BitsoAggregator) GetAggregations() (types.OutputLayouts, error) {
-	timer := time.NewTimer(10 * time.Second)
+	timer := time.NewTimer(1 * time.Second)
 	outputLayouts := types.OutputLayouts{}
 
 	select {
